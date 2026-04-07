@@ -6,24 +6,34 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    IPlayerStates playerStates;
-    [SerializeField] LayerMask groundMask;
+    IPlayerStates playerState;
+    [SerializeField] public LayerMask[] groundMask { get; }
     private void Awake()
     {
-        playerStates = new BaseState(gameObject.GetComponent<Rigidbody2D>(), gameObject.GetComponent<Transform>(), groundMask);
+        playerState = new BaseState(gameObject);
+        Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Player"));
+
+        Debug.DrawRay(transform.position, Vector2.down * 0.7f, Color.red);
     }
     public void Update()
     {
         Movement();
+        if (Input.GetKeyUp(KeyCode.J))
+        {
+            Debug.Log(playerState);
+        }
     }
     private void Movement()
     {
         float input = Input.GetAxis("Horizontal");
-        bool jump = false;
         if (Input.GetButtonDown("Jump"))
         {
-            playerStates.OnJump();
+            playerState.OnJump();
         }
-        playerStates.Movement(input);
+        playerState.Movement(input);
+    }
+    public void ChangeState(ItemStatesTypes itemStatesType, GameObject item = null)
+    {
+        playerState = StatesFabric.NewState(itemStatesType, gameObject, item);
     }
 }
