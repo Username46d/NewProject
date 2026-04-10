@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.Progress;
 
 public abstract class IPlayerStates
 {
@@ -9,16 +11,15 @@ public abstract class IPlayerStates
 }
 public class BaseState : IPlayerStates 
 {
-    public float speed = 3.0f;
-    public float jumpForce = 5.0f;
+    float speed = 3.0f;
+    float jumpForce = 5.0f;
     Rigidbody2D rigidbody;
     Transform transform;
-    LayerMask[] groundMask;
+    bool isEquipped = false;
     public BaseState(GameObject gameObject) { 
-        (rigidbody, transform, groundMask) = 
+        (rigidbody, transform) = 
             (gameObject.GetComponent<Rigidbody2D>(), 
-            gameObject.GetComponent<Transform>(), 
-            gameObject.GetComponent<Player>().groundMask); }
+            gameObject.GetComponent<Transform>()); }
     public override void Movement(float move)
     {
         rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y);
@@ -28,12 +29,14 @@ public class BaseState : IPlayerStates
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, ~(1 << LayerMask.NameToLayer("Player")));
         Collider2D collider = hit.collider;
         bool isGrounded = collider != null && (1 << collider.gameObject.layer) != 0;
-        Debug.Log(isGrounded, collider);
         if (isGrounded)
         {
-            if (collider.CompareTag("Item"))
+            if (collider.CompareTag("Item") )
             {
+                if (isEquipped){return;}
+                AllGamesPhysics.instance.ThrowItem(transform.gameObject, collider.gameObject);
                 rigidbody.gameObject.GetComponent<Player>().ChangeState(collider.GetComponent<ItemData>().itemStatesType, collider.gameObject);
+                isEquipped = true;
             }
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
         }
@@ -47,24 +50,20 @@ public class JumpState : IPlayerStates
     public float jumpForce = 5.0f;
     Rigidbody2D rigidbody;
     Transform transform;
-    LayerMask[] groundMask;
     GameObject item;
     int lastMove = 1;
     public JumpState(GameObject player, GameObject thisItem) {
-        (rigidbody, transform, groundMask, item) = 
+        (rigidbody, transform, item) = 
             (player.GetComponent<Rigidbody2D>(),
             player.GetComponent<Transform>(),
-            player.GetComponent<Player>().groundMask,
             thisItem); }
     public override void OnJump()
     {
-        Vector3 target = transform.position + new Vector3(lastMove * 3f, 1f, 0f);
-        item.transform.position = target;
-        //AllGamesPhysics.ThrowItem(item, )
+        AllGamesPhysics.instance.PickUpItem(transform.gameObject, item, lastMove);
         rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
     }
     public override void Movement(float move) {
-        if (move != 0) { lastMove = move > 0 ? 1 : -1; }
+        if (move != 0) { lastMove = move > 0 ? 1 : lastMove < 0 ? -1 : -1; }
         rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y); 
     }
 }

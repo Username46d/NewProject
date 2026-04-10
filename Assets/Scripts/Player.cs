@@ -7,7 +7,6 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     IPlayerStates playerState;
-    [SerializeField] public LayerMask[] groundMask { get; }
     private void Awake()
     {
         playerState = new BaseState(gameObject);
