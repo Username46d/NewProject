@@ -18,8 +18,9 @@ public class AllGamesPhysics : MonoBehaviour
         instance = this;
     }
 
-    public void ThrowItem(GameObject player, GameObject item)
+    public void PickUpItem(GameObject player, GameObject item)
     {
+        item.GetComponent<ItemData>().state = ItemStates.ProcessEq;
         Transform playerTransform = player.transform;
         StartCoroutine(AttractAnimation(playerTransform, item.transform));
     }
@@ -38,26 +39,43 @@ public class AllGamesPhysics : MonoBehaviour
         }
         item.transform.SetParent(target);
 
+        item.GetComponent<Rigidbody2D>().gravityScale = 0f;
         item.GetComponent<Rigidbody2D>().simulated = false;
+        item.GetComponent<ItemData>().state = ItemStates.Equipped;
     }
 
-    public void PickUpItem(GameObject player, GameObject item, float direction)
+    public void ThrowItem(GameObject player, GameObject item, float direction)
     {
+        Debug.Log("ВО ВРЕМЯ БРОСКА" + direction);
+        item.GetComponent<ItemData>().state = ItemStates.Throw;
         item.GetComponent<Rigidbody2D>().simulated = true;
         item.transform.SetParent(null);
+        Debug.Log("Вектор до " + throwingVector);
+        Vector3 newThrowingVector = throwingVector;
+        newThrowingVector.x *= direction;
+        Debug.Log("Вектор после " + throwingVector);
+        item.GetComponent <Rigidbody2D>().velocity = newThrowingVector;
 
-        throwingVector.x *= direction;
-        item.GetComponent <Rigidbody2D>().velocity = throwingVector;
-
-        item.GetComponent<Rigidbody2D>().gravityScale = gravityItem;
-        float timer = 0f;
-        while (timer < timeOfGravity)
-        {
-            Debug.Log(gravityItem);
-            Debug.Log(item.GetComponent<Rigidbody2D>().gravityScale);
-            timer += Time.deltaTime;
-        }
-        item.GetComponent<Rigidbody2D>().gravityScale = 0;
+        StartCoroutine(GravityItem(item));
     }
+    public void ThrowItem(GameObject player, GameObject item)
+    {
+        item.GetComponent<ItemData>().state = ItemStates.Throw;
+        item.GetComponent<Rigidbody2D>().simulated = true;
+        item.transform.SetParent(null);
+        item.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        StartCoroutine(GravityItem(item));
+    }
+    private IEnumerator GravityItem(GameObject gameObject)
+    {
+        ItemData itemData = gameObject.GetComponent<ItemData>();
+        yield return new WaitForSeconds(0.5f);
+        itemData.state = ItemStates.Idle;
+        yield return new WaitForSeconds(1.5f);
+        if (itemData.state is ItemStates.Idle)
+        {
+            gameObject.GetComponent<Rigidbody2D>().gravityScale = 1f;
+        }
 
+    }
 }

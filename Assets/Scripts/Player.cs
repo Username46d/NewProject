@@ -31,8 +31,7 @@ public class Player : MonoBehaviour
         }
         playerState.Movement(input);
     }
-    public void ChangeState(ItemStatesTypes itemStatesType, GameObject item = null)
-    {
-        playerState = StatesFabric.NewState(itemStatesType, gameObject, item);
-    }
+    public void ChangeState(ItemStatesTypes itemStatesType, GameObject item = null){playerState = StatesFabric.NewState(itemStatesType, gameObject, item);}
+    public void OnTriggerEnter2D(Collider2D collision){playerState.Collision(collision.gameObject, true);}
+    public void OnTriggerExit2D(Collider2D collision){playerState.Collision(collision.gameObject, false);}
 }

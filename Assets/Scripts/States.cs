@@ -8,6 +8,7 @@ public abstract class IPlayerStates
 {
     public abstract void Movement(float move);
     public abstract void OnJump();
+    public abstract void Collision(GameObject gameObject, bool isCollision);
 }
 public class BaseState : IPlayerStates 
 {
@@ -15,7 +16,7 @@ public class BaseState : IPlayerStates
     float jumpForce = 5.0f;
     Rigidbody2D rigidbody;
     Transform transform;
-    bool isEquipped = false;
+    GameObject item;
     public BaseState(GameObject gameObject) { 
         (rigidbody, transform) = 
             (gameObject.GetComponent<Rigidbody2D>(), 
@@ -29,19 +30,48 @@ public class BaseState : IPlayerStates
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, ~(1 << LayerMask.NameToLayer("Player")));
         Collider2D collider = hit.collider;
         bool isGrounded = collider != null && (1 << collider.gameObject.layer) != 0;
-        if (isGrounded)
+        //if (isCollision)
+        //{
+        //    if (collider.CompareTag("Item"))
+        //    {
+        //        if (isEquipped) { return; }
+        //        AllGamesPhysics.instance.ThrowItem(transform.gameObject, collider.gameObject);
+        //        rigidbody.gameObject.GetComponent<Player>().ChangeState(collider.GetComponent<ItemData>().itemStatesType, collider.gameObject);
+        //        isEquipped = true;
+        //    }
+        //    rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
+        //    isCollision = false;
+        //}
+        if (isGrounded || item)
         {
-            if (collider.CompareTag("Item") )
+            if (item && (item.GetComponent<ItemData>().state is not ItemStates.Idle)) { return; }
+            if (item)
             {
-                if (isEquipped){return;}
-                AllGamesPhysics.instance.ThrowItem(transform.gameObject, collider.gameObject);
-                rigidbody.gameObject.GetComponent<Player>().ChangeState(collider.GetComponent<ItemData>().itemStatesType, collider.gameObject);
-                isEquipped = true;
+                Debug.Log("Âçÿòî");
+                AllGamesPhysics.instance.PickUpItem(transform.gameObject, item);
+                rigidbody.gameObject.GetComponent<Player>().ChangeState(item.GetComponent<ItemData>().itemStatesType, item);
             }
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
         }
     }
+    public override void Collision(GameObject gameObject, bool isCollision)
+    {
+        if (isCollision)
+        {
+            if (gameObject.CompareTag("Item"))
+            {
+                item = gameObject;
+            }
+        }
+        else
+        {
+            if (gameObject.CompareTag("Item"))
+            {
+                item = null;
+            }
+        }
 
+    }
 }
 
 public class JumpState : IPlayerStates
@@ -59,12 +89,30 @@ public class JumpState : IPlayerStates
             thisItem); }
     public override void OnJump()
     {
-        AllGamesPhysics.instance.PickUpItem(transform.gameObject, item, lastMove);
-        rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
+        if (item.GetComponent<ItemData>().state is ItemStates.Equipped)
+        {
+            Debug.Log("ÂÎ ÂÐÅÌß ÁÐÎÑÊÀ" + lastMove);
+            AllGamesPhysics.instance.ThrowItem(transform.gameObject, item, lastMove);
+            rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
+            rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
+            Debug.Log("Áðîøåíî");
+        }
     }
     public override void Movement(float move) {
         if (move != 0) { lastMove = move > 0 ? 1 : lastMove < 0 ? -1 : -1; }
-        rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y); 
+        rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y);
+        Debug.Log(lastMove);
+    }
+    public override void Collision(GameObject gameObject, bool isCollision)
+    {
+        if (isCollision)
+        {
+            if (gameObject.CompareTag("ResetBlock"))
+            {
+                AllGamesPhysics.instance.ThrowItem(transform.gameObject, item);
+                rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
+            }
+        }
     }
 }
 
