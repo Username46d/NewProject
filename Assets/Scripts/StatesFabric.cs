@@ -4,13 +4,13 @@ using UnityEngine;
 
 public static class StatesFabric
 {
-    public static IPlayerStates NewState(ItemStatesTypes itemStatesType, GameObject player, GameObject item = null)
+    public static IPlayerStates NewState(ItemStatesTypes itemStatesType, GameObject player, int lastMove, GameObject item = null)
     {
         return itemStatesType switch
         {
-            ItemStatesTypes.Normal => new BaseState(player),
-            ItemStatesTypes.JumpObject => new JumpState(player, item),
-            _ => new BaseState(player)
+            ItemStatesTypes.Normal => new BaseState(player, lastMove),
+            ItemStatesTypes.JumpObject => new JumpState(player, item, lastMove),
+            _ => new BaseState(player, lastMove)
         };
     }
 }

@@ -14,20 +14,27 @@ public class BaseState : IPlayerStates
 {
     float speed = 3.0f;
     float jumpForce = 5.0f;
+    CoyoteTime coyoteTime = new CoyoteTime();
     Rigidbody2D rigidbody;
     Transform transform;
     GameObject item;
-    public BaseState(GameObject gameObject) { 
-        (rigidbody, transform) = 
+    int lastMove = 1;
+    public BaseState(GameObject gameObject, int newLastMove) { 
+        (rigidbody, transform, lastMove) = 
             (gameObject.GetComponent<Rigidbody2D>(), 
-            gameObject.GetComponent<Transform>()); }
+            gameObject.GetComponent<Transform>(),
+            newLastMove); }
     public override void Movement(float move)
     {
+        if (coyoteTime.isCoyoteTime)
+        {
+            coyoteTime.coyoteTime += Time.deltaTime;
+        }
         rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y);
     }
     public override void OnJump()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, ~(1 << LayerMask.NameToLayer("Player")));
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, (1 << LayerMask.NameToLayer("Ground")));
         Collider2D collider = hit.collider;
         bool isGrounded = collider != null && (1 << collider.gameObject.layer) != 0;
         //if (isCollision)
@@ -47,11 +54,16 @@ public class BaseState : IPlayerStates
             if (item && (item.GetComponent<ItemData>().state is not ItemStates.Idle)) { return; }
             if (item)
             {
-                Debug.Log("Âçÿòî");
                 AllGamesPhysics.instance.PickUpItem(transform.gameObject, item);
-                rigidbody.gameObject.GetComponent<Player>().ChangeState(item.GetComponent<ItemData>().itemStatesType, item);
+                rigidbody.gameObject.GetComponent<Player>().ChangeState(item.GetComponent<ItemData>().itemStatesType, lastMove, item);
             }
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
+            coyoteTime.isCoyoteTime = false; coyoteTime.isJumped = true;
+        }
+        if (coyoteTime.isCoyoteTime && coyoteTime.coyoteTime < 1f)
+        {
+            rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
+            coyoteTime.isCoyoteTime = false;
         }
     }
     public override void Collision(GameObject gameObject, bool isCollision)
@@ -62,12 +74,20 @@ public class BaseState : IPlayerStates
             {
                 item = gameObject;
             }
+            if (gameObject.CompareTag("Ground"))
+            {
+                coyoteTime.isCoyoteTime = false; coyoteTime.coyoteTime = 0f; coyoteTime.isJumped = false;
+            }
         }
         else
         {
             if (gameObject.CompareTag("Item"))
             {
                 item = null;
+            }
+            if (gameObject.CompareTag("Ground") && !coyoteTime.isJumped)
+            {
+                coyoteTime.isCoyoteTime = true; 
             }
         }
 
@@ -82,26 +102,24 @@ public class JumpState : IPlayerStates
     Transform transform;
     GameObject item;
     int lastMove = 1;
-    public JumpState(GameObject player, GameObject thisItem) {
-        (rigidbody, transform, item) = 
+    public JumpState(GameObject player, GameObject thisItem, int newLastMove) {
+        (rigidbody, transform, item, lastMove) = 
             (player.GetComponent<Rigidbody2D>(),
             player.GetComponent<Transform>(),
-            thisItem); }
+            thisItem, 
+            newLastMove); }
     public override void OnJump()
     {
         if (item.GetComponent<ItemData>().state is ItemStates.Equipped)
         {
-            Debug.Log("ÂÎ ÂÐÅÌß ÁÐÎÑÊÀ" + lastMove);
-            AllGamesPhysics.instance.ThrowItem(transform.gameObject, item, lastMove);
+            AllGamesPhysics.instance.ThrowItem(item, lastMove);
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
-            rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
-            Debug.Log("Áðîøåíî");
+            rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal, lastMove);
         }
     }
     public override void Movement(float move) {
         if (move != 0) { lastMove = move > 0 ? 1 : lastMove < 0 ? -1 : -1; }
         rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y);
-        Debug.Log(lastMove);
     }
     public override void Collision(GameObject gameObject, bool isCollision)
     {
@@ -109,8 +127,8 @@ public class JumpState : IPlayerStates
         {
             if (gameObject.CompareTag("ResetBlock"))
             {
-                AllGamesPhysics.instance.ThrowItem(transform.gameObject, item);
-                rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal);
+                AllGamesPhysics.instance.ThrowItem(item);
+                rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal, lastMove);
             }
         }
     }
@@ -120,4 +138,11 @@ public enum TypesGround
 {
     Ground,
     Item
+}
+public struct CoyoteTime
+{
+    public bool isCoyoteTime;
+    public bool isJumped;
+    public float coyoteTime;
+    public float maxCoyoteTime;
 }
