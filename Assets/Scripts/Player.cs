@@ -11,12 +11,14 @@ public class Player : MonoBehaviour
     {
         playerState = new BaseState(gameObject, 1);
         Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Player"));
-
-        Debug.DrawRay(transform.position, Vector2.down * 0.7f, Color.red);
     }
     public void Update()
     {
         Movement();
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            CheckpointManager.Instance.TeleportPlayer();
+        }
     }
     private void Movement()
     {
@@ -27,7 +29,7 @@ public class Player : MonoBehaviour
         }
         playerState.Movement(input);
     }
-    public void ChangeState(ItemStatesTypes itemStatesType, int lastMove, GameObject item = null){playerState = StatesFabric.NewState(itemStatesType, gameObject, lastMove, item);}
+    public void ChangeState(ItemStatesTypes itemStatesType, int lastMove, GameObject item = null) { playerState = StatesFabric.NewState(itemStatesType, gameObject, lastMove, item); }
     public void OnCollisionEnter2D(Collision2D collision)
     {
         playerState.Collision(collision.gameObject, true);
@@ -36,7 +38,8 @@ public class Player : MonoBehaviour
     {
         playerState.Collision(collision.gameObject, false);
     }
-    public void OnTriggerEnter2D(Collider2D collision){playerState.Collision(collision.gameObject, true);}
-    public void OnTriggerExit2D(Collider2D collision){playerState.Collision(collision.gameObject, false);}
-    public void OnChildCollision(Collider2D collision) { playerState.Collision(collision.gameObject, true);  }
+    public void OnTriggerEnter2D(Collider2D collision) { playerState.Collision(collision.gameObject, true); }
+    public void OnTriggerExit2D(Collider2D collision) { playerState.Collision(collision.gameObject, false); }
+    public void OnChildCollision(Collider2D collision) { playerState.Collision(collision.gameObject, true); }
+    public IPlayerStates GetStates() { return playerState;  }
 }

@@ -12,7 +12,6 @@ public class ItemData : MonoBehaviour
     public void Start(){state = ItemStates.Idle;}
     public void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log("Была коллизия");
         Vector2 normal = collision.GetContact(0).normal;
         if (Mathf.Abs(normal.x) > 0.5f)
         {
@@ -25,7 +24,6 @@ public class ItemData : MonoBehaviour
         {
             GetComponentInParent<Player>().OnChildCollision(collision);
         }
-        Debug.Log("Была коллизия");
     }
 }
 

@@ -34,7 +34,7 @@ public class BaseState : IPlayerStates
     }
     public override void OnJump()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, (1 << LayerMask.NameToLayer("Ground")));
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, (1 << LayerMask.NameToLayer("Ground")) | (1 << LayerMask.NameToLayer("MovingPlatform")) );
         Collider2D collider = hit.collider;
         bool isGrounded = collider != null && (1 << collider.gameObject.layer) != 0;
         //if (isCollision)
@@ -112,6 +112,7 @@ public class JumpState : IPlayerStates
     {
         if (item.GetComponent<ItemData>().state is ItemStates.Equipped)
         {
+            CheckpointManager.Instance.SaveLastItem(item);
             AllGamesPhysics.instance.ThrowItem(item, lastMove);
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
             rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal, lastMove);
