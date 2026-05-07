@@ -13,4 +13,17 @@ public static class StatesFabric
             _ => new BaseState(player, lastMove)
         };
     }
+    public static ICameraStates NewCameraState(CameraStatesType cameraStates, GameObject camera, Transform player)
+    {
+        return cameraStates switch
+        {
+            CameraStatesType.FollowCamera => new FollowCamera(camera, player),
+            _ => new FollowCamera(camera, player)
+        };
+    }
+}
+public enum CameraStatesType
+{
+    FollowCamera,
+    StaticCamera
 }
