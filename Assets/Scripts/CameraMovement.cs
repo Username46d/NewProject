@@ -12,7 +12,7 @@ public class CameraMovement : MonoBehaviour
 
     private void Awake()
     {
-        states = new StaticCamera(gameObject, target);
+        states = new FollowCamera(gameObject, target);
         Instance = this;
     }
     private void Update()
@@ -29,7 +29,6 @@ public interface ICameraStates
 {
     public void Enter();
     public void Update();
-    public void Exit();
 }
 public class FollowCamera : ICameraStates
 {
@@ -46,10 +45,6 @@ public class FollowCamera : ICameraStates
     {
         camera.transform.position = target.position + new Vector3(0, 0, -10f);
     }
-    public void Exit()
-    {
-
-    }
 }
 public class StaticCamera : ICameraStates
 {
@@ -65,12 +60,25 @@ public class StaticCamera : ICameraStates
     }
     public void Update()
     {
+
+    }
+}
+public class ExpandingCamera : ICameraStates
+{
+    GameObject camera;
+    CameraMovement cameraMovement;
+    Transform target;
+    float distance = 2f;
+
+    public ExpandingCamera(GameObject tCamera, Transform player) { (camera, cameraMovement, target) = (tCamera, tCamera.GetComponent<CameraMovement>(), player); }
+    public void Enter()
+    {
+
+    }
+    public void Update()
+    {
         float distanceX = Mathf.Max(2f, Mathf.Abs(camera.transform.position.x - target.position.x) + 0.1f);
         float distanceY = Mathf.Max(2f, Mathf.Abs(camera.transform.position.y - target.position.y) + 0.1f);
         camera.GetComponent<Camera>().orthographicSize = Mathf.Max(distanceX, distanceY);
-    }
-    public void Exit()
-    {
-
     }
 }

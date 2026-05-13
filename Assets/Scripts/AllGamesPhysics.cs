@@ -109,18 +109,17 @@ public class AllGamesPhysics : MonoBehaviour
         {
             item.GetComponent<Rigidbody2D>().gravityScale = 1f;
         }
-        bool isGround = false;
-        while (!isGround)
-        {
-            RaycastHit2D hit = Physics2D.Raycast(item.transform.position, Vector2.down, 1.5f, LayerMask.GetMask("Ground"));
-            if (hit.collider != null)
-            {
-                isGround = true;
-            }
-            yield return null;
-        }
-        item.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
-        item.GetComponent<Rigidbody2D>().gravityScale = 0f;
         yield break;
+    }
+    public void MagneticPlayer(Rigidbody2D player, bool isMagnetic)
+    {
+        if (isMagnetic)
+        {
+            player.constraints |= RigidbodyConstraints2D.FreezePositionY;
+        }
+        else
+        {
+            player.constraints &= ~RigidbodyConstraints2D.FreezePositionY;
+        }
     }
 }

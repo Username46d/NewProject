@@ -30,16 +30,12 @@ public class Player : MonoBehaviour
         playerState.Movement(input);
     }
     public void ChangeState(ItemStatesTypes itemStatesType, int lastMove, GameObject item = null) { playerState = StatesFabric.NewState(itemStatesType, gameObject, lastMove, item); }
-    public void OnCollisionEnter2D(Collision2D collision)
-    {
-        playerState.Collision(collision.gameObject, true);
-    }
-    public void OnCollisionExit2D(Collision2D collision)
-    {
-        playerState.Collision(collision.gameObject, false);
-    }
-    public void OnTriggerEnter2D(Collider2D collision) { playerState.Collision(collision.gameObject, true); }
-    public void OnTriggerExit2D(Collider2D collision) { playerState.Collision(collision.gameObject, false); }
-    public void OnChildCollision(Collider2D collision) { playerState.Collision(collision.gameObject, true); }
+    public void OnCollisionEnter2D(Collision2D collision){playerState.Collision(collision.gameObject, true, false);}
+    public void OnCollisionExit2D(Collision2D collision){playerState.Collision(collision.gameObject, false, false);}
+    public void OnTriggerEnter2D(Collider2D collision) { playerState.Collision(collision.gameObject, true, true); }
+    public void OnTriggerExit2D(Collider2D collision) { playerState.Collision(collision.gameObject, false, true); }
+    public void OnChildCollisionEnter(Collider2D collision, bool isTrigger) { playerState.Collision(collision.gameObject, true, isTrigger); }
+
+    public void OnChildCollisionExit(Collider2D collision, bool isTrigger) { playerState.Collision(collision.gameObject, false, isTrigger); }
     public IPlayerStates GetStates() { return playerState;  }
 }

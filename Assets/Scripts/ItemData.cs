@@ -22,16 +22,18 @@ public class ItemData : MonoBehaviour
     {
         if (gameObject.transform.parent != null)
         {
-            GetComponentInParent<Player>().OnChildCollision(collision);
+            GetComponentInParent<Player>().OnChildCollisionEnter(collision, true);
+        }
+    }
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (gameObject.transform.parent != null)
+        {
+            GetComponentInParent<Player>().OnChildCollisionExit(collision, true);
         }
     }
 }
 
-//public class MovementBlock : MonoBehaviour
-//{ 
-
-//    void 
-//}
 
 public enum ItemStatesTypes{
     Normal,

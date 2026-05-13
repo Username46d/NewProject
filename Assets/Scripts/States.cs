@@ -2,13 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 public abstract class IPlayerStates
 {
     public abstract void Movement(float move);
     public abstract void OnJump();
-    public abstract void Collision(GameObject gameObject, bool isCollision);
+    public abstract void Collision(GameObject gameObject, bool isCollision, bool isTrigger);
 }
 public class BaseState : IPlayerStates 
 {
@@ -37,18 +36,6 @@ public class BaseState : IPlayerStates
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.7f, (1 << LayerMask.NameToLayer("Ground")) | (1 << LayerMask.NameToLayer("MovingPlatform")) );
         Collider2D collider = hit.collider;
         bool isGrounded = collider != null && (1 << collider.gameObject.layer) != 0;
-        //if (isCollision)
-        //{
-        //    if (collider.CompareTag("Item"))
-        //    {
-        //        if (isEquipped) { return; }
-        //        AllGamesPhysics.instance.ThrowItem(transform.gameObject, collider.gameObject);
-        //        rigidbody.gameObject.GetComponent<Player>().ChangeState(collider.GetComponent<ItemData>().itemStatesType, collider.gameObject);
-        //        isEquipped = true;
-        //    }
-        //    rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
-        //    isCollision = false;
-        //}
         if (isGrounded || item)
         {
             if (item && (item.GetComponent<ItemData>().state is not ItemStates.Idle)) { return; }
@@ -66,7 +53,7 @@ public class BaseState : IPlayerStates
             coyoteTime.isCoyoteTime = false;
         }
     }
-    public override void Collision(GameObject gameObject, bool isCollision)
+    public override void Collision(GameObject gameObject, bool isCollision, bool isTrigger)
     {
         if (isCollision)
         {
@@ -113,6 +100,7 @@ public class JumpState : IPlayerStates
         if (item.GetComponent<ItemData>().state is ItemStates.Equipped)
         {
             CheckpointManager.Instance.SaveLastItem(item);
+            AllGamesPhysics.instance.MagneticPlayer(rigidbody, false);
             AllGamesPhysics.instance.ThrowItem(item, lastMove);
             rigidbody.velocity = new Vector2(rigidbody.velocity.x, jumpForce);
             rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal, lastMove);
@@ -122,7 +110,7 @@ public class JumpState : IPlayerStates
         if (move != 0) { lastMove = move > 0 ? 1 : lastMove < 0 ? -1 : -1; }
         rigidbody.velocity = new Vector2(move * speed, rigidbody.velocity.y);
     }
-    public override void Collision(GameObject gameObject, bool isCollision)
+    public override void Collision(GameObject gameObject, bool isCollision, bool isTrigger)
     {
         if (isCollision)
         {
@@ -130,6 +118,17 @@ public class JumpState : IPlayerStates
             {
                 AllGamesPhysics.instance.ThrowItem(item);
                 rigidbody.gameObject.GetComponent<Player>().ChangeState(ItemStatesTypes.Normal, lastMove);
+            }
+            if (isTrigger && gameObject.CompareTag("MagneticPlatform"))
+            {
+                AllGamesPhysics.instance.MagneticPlayer(rigidbody, true);
+            }
+        }
+        else
+        {
+            if (isTrigger && gameObject.CompareTag("MagneticPlatform"))
+            {
+                AllGamesPhysics.instance.MagneticPlayer(rigidbody, false);
             }
         }
     }

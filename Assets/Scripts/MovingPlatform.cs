@@ -13,38 +13,105 @@ public class MovingPlatform : MonoBehaviour
     {
         currentPoint = 0;
     }
-    private void Update()
+    public void Moving()
     {
-        if (isMoving)
+        transform.position = Vector3.MoveTowards(transform.position, points[currentPoint].transform.position, speed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, points[currentPoint].transform.position) < 0.01f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, points[currentPoint].transform.position, speed * Time.deltaTime);
-            if (Vector3.Distance(transform.position, points[currentPoint].transform.position) < 0.01f) 
+            if (currentPoint + 1 == points.Length)
             {
-               if (currentPoint + 1 == points.Length)
-                {
-                    currentPoint = 0;
-                }
-                else
-                {
-                    currentPoint += 1;
-                }
+                currentPoint = 0;
+            }
+            else
+            {
+                currentPoint += 1;
             }
         }
     }
-    public void OnCollisionEnter2D(Collision2D collision)
+
+
+    public void OnCollisionStay2D(Collision2D collision)
     {
-        if (collision.gameObject.GetComponent<ItemData>() || collision.gameObject.GetComponentInChildren<ItemData>())
+        if (collision.gameObject.GetComponent<ItemData>())
         {
-            collision.gameObject.transform.SetParent(gameObject.transform);
-            isMoving = true;
-        } 
-    }
-    public void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.GetComponent<ItemData>() || collision.gameObject.GetComponentInChildren<ItemData>())
+            Moving();
+            collision.gameObject.GetComponent<Transform>().SetParent(transform);
+        }
+        if (collision.gameObject.GetComponentInChildren<ItemData>())
         {
-            isMoving = false;
-            collision.gameObject.transform.SetParent(null);
+            Moving();
         }
     }
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.GetComponent<ItemData>())
+        {
+            Moving();
+        }
+    }
+    //public void OnTriggerExit2D(Collider2D collision)
+    //{
+    //    if (collision.GetComponent<ItemData>())
+    //    {
+    //        isMoving = false;
+    //    }
+    //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //public void TryMoving(bool isMoving, GameObject collision)
+    //{
+    //    collision.gameObject.transform.SetParent(gameObject.transform);
+    //    isMoving = true;
+    //}
+    //public void OnCollisionExit2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.GetComponent<ItemData>())
+    //    {
+    //        isMoving = false;
+    //    }
+    //}
+    //public void OnTriggerExit2D(Collider2D collision)
+    //{
+    //    if (collision.gameObject.GetComponent<ItemData>())
+    //    {
+    //        isMoving = false;
+    //    }
+    //}
+    //public void OnCollisionStay2D(Collision2D collision)
+    //{
+    //    if (collision.gameObject.GetComponent<ItemData>())
+    //    {
+    //        collision.gameObject.transform.SetParent(gameObject.transform);
+    //        isMoving = true;
+    //    }
+    //    else if (collision.gameObject.GetComponentInChildren<ItemData>())
+    //    {
+    //        isMoving = true;
+    //    }
+    //}
+    //public void OnTriggerStay2D(Collider2D collision)
+    //{
+    //    if (collision.gameObject.GetComponent<ItemData>())
+    //    {
+    //        collision.gameObject.transform.SetParent(gameObject.transform);
+    //        isMoving = true;
+    //    }
+    //    else if (collision.gameObject.GetComponentInChildren<ItemData>())
+    //    {
+    //        isMoving = true;
+    //    }
+    //}
 }
